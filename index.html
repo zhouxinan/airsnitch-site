@@ -1,14 +1,146 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>AirSnitch</title>
-  </head>
-  <body>
-    <h1>AirSnitch</h1>
-    <p>Project website.</p>
-    <p><a href="https://github.com/zhouxinan/airsnitch">Code repository 1</a></p>
-    <p><a href="https://github.com/vanhoefm/airsnitch">Code repository 2</a></p>
-  </body>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AirSnitch</title>
+</head>
+<body>
+  <h1>AirSnitch</h1>
+  <p>Demystifying and Breaking Client Isolation in Wi-Fi Networks</p>
+
+  <h2>Intro</h2>
+  <p>
+    Client isolation (a.k.a. AP isolation) is widely deployed to stop malicious Wi-Fi clients from attacking other clients
+    on the same network. AirSnitch shows that isolation is not standardized and its guarantees vary across vendors, leading
+    to inconsistent and often incomplete enforcement.
+  </p>
+  <p>
+    The paper performs a structured analysis across three boundaries where isolation is expected to hold:
+    (A) Wi-Fi encryption, (B) IP/routing, and (C) link-layer switching.
+  </p>
+
+  <h2>Details</h2>
+  <h3>Why isolation breaks</h3>
+  <p>
+    The paper identifies several root causes:
+    shared Wi-Fi keys for group/broadcast traffic can be abused; isolation is often enforced at only one layer (MAC or IP);
+    and identity (MAC/IP/keys) can be weakly synchronized across the network stack, enabling bypasses.
+  </p>
+
+  <h3>Key attack ideas (high level)</h3>
+  <p>
+    1) Shared-key abuse: group/broadcast protection keys can be leveraged by insiders to inject traffic that reaches other clients.
+  </p>
+  <p>
+    2) Gateway bouncing: even if direct L2 forwarding is blocked, packets can be “bounced” via the default gateway when IP-layer
+    isolation is missing.
+  </p>
+  <p>
+    3) Switching/port-stealing style interception: by manipulating MAC-to-port learning across virtual Wi-Fi “ports” (BSSIDs),
+    an attacker can redirect traffic intended for a victim to the attacker, enabling interception.
+  </p>
+
+  <h2>Paper</h2>
+  <p>
+    AirSnitch is an NDSS 2026 paper that studies client isolation across home and enterprise Wi-Fi settings and reports that
+    every tested router/network was vulnerable to at least one attack.
+  </p>
+  <p>
+    Contributions include novel MitM primitives that break isolation, showing client isolation is fundamentally broken
+    for all WPA versions, and extending bypasses to multi-AP/multi-SSID enterprise-style deployments.
+  </p>
+
+  <h2>Tools</h2>
+  <p>
+    The authors open-source their measurement suite and code for reproducibility.
+  </p>
+  <p><a href="https://github.com/zhouxinan/airsnitch">Code repository 1</a></p>
+  <p><a href="https://github.com/vanhoefm/airsnitch">Code repository 2</a></p>
+  <p>
+    The artifact appendix also describes scripts to test devices for gateway bouncing, port stealing, and GTK abuse,
+    including a virtualized Wi-Fi environment to validate the tooling.
+  </p>
+
+  <h2>Q&amp;A (Last update: 3/5/2026)</h2>
+  <h3>What are the key discoveries of this paper?</h3>
+  <p>
+    This work reminds practitioners of something easy to forget: Wi-Fi is essentially Ethernet extended into the wireless domain, and it inevitably inherits some of Ethernet’s structural insecurities. To support mobility and seamless roaming, modern deployments allow clients to move across multiple BSSIDs on the same AP (for example, transparently shifting from 2.4 GHz to 5 GHz under load). Each BSSID effectively behaves like a hardware or virtualized layer-1 port on the AP. 
+
+    As a result, an attacker can abuse layer-1 port states in a target Wi-Fi infrastructure to steal traffic and perform MitM attacks. This is due to the vulnerable protocol-infrastructure interactions in Wi-Fi. Fundamentally, Wi-Fi's over-the-air encryption protocols (e.g., WEP, TKIP, CCMP, GCMP) did not cooperate well with layer-2 switching. An attacker can disrupt the layer-2 switching tables (i.e., MAC-to-port mappings) in an AP to "bypass Wi-Fi encryption".
+
+    In large enterprise environments, with dozens or hundreds of APs and BSSIDs, this creates a broad and often under-examined attack surface. An attacker who can manipulate layer-1 port states (e.g., from a guest SSID) may be able to interfere with or disrupt other SSIDs even protected by WPA2/3-Enterprise. Also, there can be weak layer-3 isolation between guest and main networks that allows an attacker to inject packets. The Wi-Fi standard also has some design errors, like shared GTK/IGTK, that allowed breaking client isolation even for WPA2/3-Enterprise. 
+  </p>
+  <h3>What does "client isolation" aim to prevent?</h3>
+  <p>
+    Direct client-to-client interception, injection, and communication within the same Wi-Fi LAN, including across BSSIDs,
+    APs, and SSIDs in a shared distribution system, if done correctly. However, we use this research to reveal that in the real world, such "client isolation" is very problematic and could be bypassed by attackers from different networking layers. 
+  </p>
+
+  <h3>What should defenders take away?</h3>
+  <p>
+    Isolation needs a clear, standardized definition and must be enforced consistently across encryption, routing, and switching.
+    If any boundary is weak (shared group keys, missing IP-layer rules, or leaky switching behavior), isolation can fail in practice. Do not assume using WPA3-Enterprise alone can provide enough security for an enterprise network. Instead, strengthen your networking infrastructure comprehensively to improve security. 
+  </p>
+
+  <h3>I'm a home/SOHO Wi-Fi user. What's the impact of the research on me?</h3>
+  <p>
+    For WPA2-Personal networks: If you share a passphrase with other users, other users will be able to decrypt your traffic over-the-air by calculating your Wi-Fi PTK keys. 
+    For WPA3-Personal networks: If you share a passphrase with other users, other users can host a fake AP with the same passphrase and induce your client into connecting to that rogue AP to see your traffic. 
+    Some Wi-Fi routers have "guest network" features. However, one major argument and discovery in the paper is that such "guest networks" can unintendedly become attack surfaces, allowing an attacker to break the security of the main network and steal traffic from the main network. 
+  </p>
+
+  <h3>How should enterprise Wi-Fi defenses evolve in response to the AirSnitch attack? </h3>
+  <p>
+    We provide a non-exhaustive list for you to check:
+    (1) Do not assume using WPA2/3-Enterprise alone provides full security. Improve your Wi-Fi infrastructure security by strengthing network isolation. 
+    (2) Make sure your guest SSID does not become an attack surface to the main network: Every guest BSSID should be isolated from other BSSIDs on a same AP. 
+    (3) Technically, you can disable shared GTK/IGTK in BSSIDs altogether to stop over-the-air GTK/IGTK abuse. 
+    (4) Segment your wired network so that attackers cannot perform cross-AP attacks. 
+    (5) Update operating systems to newest versions. 
+    (6) Use firewalls to block "Server-triggered port restoration" in the paper.
+    (7) Use VPN for even internal networks. 
+  </p>
+
+  <h3>Are you using ARP spoofing to perform MitM attacks? </h3>
+  <p>
+    No. Some attacks (e.g., Port Stealing) work at an even lower networking layer than ARP. Some attacks (e.g., Gateway Bouncing) work at layer-3 (IP). Some attacks (e.g., Abusing GTK/IGTK) abuse layer-2 Wi-Fi encryption. However, we incorporate layer-1 port state reasoning into all attack techniques. 
+  </p>
+
+  <h3>Why are your attacks characterized as Wi-Fi–specific, given that port stealing is a general Layer-2 technique? </h3>
+  <p>
+    Before this research, it was unknown whether port stealing can bypass Wi-Fi encryption. One scientific discovery of the research is that Wi-Fi cryptography can be bypassed with port stealing because there is no authentication at an even lower networking layer. By putting this puzzle of layer-1 port state reasoning back, we can develop powerful attack primitives against all existing Wi-Fi encryption protocols. GTK/IGTK Abuse is also a Wi-Fi–specific technique. 
+  </p>
+
+  <h3>Does using VLANs block all attacks?</h3>
+  <p>
+    No. Seriously, VLANs can leak in some cases (check VLAN hopping online). Gateway Bouncing also bypasses client isolation at layer-3 IP. Even if you turn on VLAN segmentation to separate guest attackers from the main WPA2/3-Enterprise SSID on one AP, an attacker might still abuse other APs to intercept WPA2/3-Enterprise traffic (see Cross-AP MitM Attacks are Practical in the paper). 
+  </p>
+
+  <h3>Why do you say AirSnitch discoveries "might have the potential to enable advanced cyberattacks"?</h3>
+  <p>
+    We list some examples to help you understand this:
+    (1) Impact towards DNS cache poisoning: An attacker can use our bidirectional MitM primitive to directly get to know DNS TXID and UDP port number and perform DNS cache poisoning easier than before. 
+    (2) Impact towards DHCP poisoning: DHCP transaction ID (8 bytes) used to be very difficult to guess or brute-force. However, an attacker can use our bidirectional MitM primitive to directly obtain it. 
+    (3) Impact towards TCP session hijacking: An attacker can directly use our bidirectional MitM primitive to learn TCP sequence numbers even under strong randomization. 
+    (4) Impact towards ARP Poisoning: Our bidirectional MitM primitive can revive ARP Poisoning because client isolation used to block ARP Poisoning frames. Now that our bypass works at an even lower layer than ARP, it can help deliver ARP Poisoning frames even under client isolation. 
+    (5) Impact towards ICMP Redirects: Our bidirectional MitM primitive can revive ICMP Redirects because ICMP Redirects rely on an attacker knowing a previous packet's header fields—specifically the source/destination IP tuple and part of the original IP header that must be quoted in the redirect message—so that the forged redirect appears consistent with an in-path router that legitimately observed and forwarded the packet triggering ICMP Redirect. However an attacker using our MitM primitive can get to know these header fields. 
+  </p>
+
+  <h3>Why do you say AirSnitch "bypasses Wi-Fi encryption"?</h3>
+  <p>
+    Although we did not cryptanalyze AES-CCMP/AES-GCMP, we still bypassed Wi-Fi encryption by abusing low-level layer-1 port states. As a result, victims still see "Wi-Fi padlocks" on and have Wi-Fi connectivity. However, their traffic has been stolen through other BSSIDs or APs. AirSnitch is a kind of active attack that fulfills this purpose.
+  </p>
+
+  <h3>The AirSnitch attack is not strong because you require WPA2/3 passphrases? Yes? </h3>
+  <p>
+    Not always. An attacker can launch the attack from an Open SSID (e.g., a guest network), and sneak into the main network (e.g., a passphrase-protected network), if network/client isolation is done incorrectly. 
+  </p>
+
+  <h3>Does switching to WPA3 keep me safe?</h3>
+  <p>
+    Not always. First, technically, WPA3 is still vulnerable to the "Abusing GTK/IGTK" attacks (see publication). Another aspect is that if you host a WPA3 BSSID and another Open BSSID on the same AP, and if network/client isolation is done incorrectly, an attacker will be able to launch the attacks from the Open BSSID to MitM the WPA3 BSSID. 
+  </p>
+
+</body>
 </html>
