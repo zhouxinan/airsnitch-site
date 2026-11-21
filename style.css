@@ -279,6 +279,15 @@ section p:last-child {
   margin-bottom: 0;
 }
 
+section p code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--bg-alt);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+
 .contrib-list {
   margin: 0 0 1rem;
   padding-left: 1.3rem;
@@ -337,6 +346,97 @@ section p:last-child {
 
 .attack h3 {
   margin-top: 0;
+}
+
+/* CVE table */
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.cve-table,
+.coverage-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.cve-table th,
+.coverage-table th {
+  font-family: var(--serif);
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink);
+  border-bottom: 1px solid var(--rule);
+  padding: 0.6rem 0.8rem 0.6rem 0;
+}
+
+.cve-table td,
+.coverage-table td {
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--rule);
+  padding: 0.7rem 0.8rem 0.7rem 0;
+}
+
+.cve-table td {
+  white-space: nowrap;
+}
+
+.cve-table td:first-child {
+  font-family: var(--mono);
+  font-size: 0.88rem;
+}
+
+.coverage-table td:first-child {
+  white-space: nowrap;
+  color: var(--ink-faint);
+  font-size: 0.88rem;
+}
+
+.favicon {
+  height: 14px;
+  width: 14px;
+  vertical-align: middle;
+  margin-right: 0.4rem;
+  border-radius: 2px;
+}
+
+.cve-status {
+  display: inline-block;
+  font-family: var(--sans);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  white-space: nowrap;
+}
+
+/* News items */
+
+.news-item {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.9rem 0;
+}
+
+.news-item:last-child {
+  border-bottom: none;
+}
+
+.news-item h3 {
+  margin: 0.3rem 0 0.5rem;
+}
+
+.news-date {
+  display: block;
+  font-family: var(--sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
 }
 
 /* BibTeX / citation block */

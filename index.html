@@ -26,6 +26,8 @@
       <nav class="site-nav">
         <a href="#overview">Overview</a>
         <a href="#attacks">Attacks</a>
+        <a href="#cves">CVE List</a>
+        <a href="#news">News</a>
         <a href="#paper">Paper</a>
         <a href="#tools">Tools</a>
         <a href="#faq">FAQ</a>
@@ -93,7 +95,7 @@
     </section>
 
     <section id="attacks">
-      <h2><span class="eyebrow">Attack Techniques</span>Three ways isolation fails</h2>
+      <h2><span class="eyebrow">Attack Techniques</span>Four ways isolation fails</h2>
 
       <div class="attack">
         <h3>1. Shared-Key (GTK/IGTK) Abuse</h3>
@@ -101,7 +103,10 @@
           Group and broadcast traffic on a Wi-Fi network is protected by a shared Group Temporal Key (GTK) and, for
           management frames, a shared Integrity GTK (IGTK). Because every client on a BSSID holds the same key, an
           insider can leverage it to craft and inject traffic that reaches other clients — a weakness that holds even
-          under WPA2/3-Enterprise.
+          under WPA2/3-Enterprise. An attacker can either wait for a periodic GTK refresh (or force one by spoofing
+          a BSS Transition Request) to obtain the real GTK, or go further: abuse a non-randomized IGTK to send a
+          broadcast WNM-Sleep Response frame that installs a GTK of the <em>attacker's own choosing</em> onto the
+          victim, who then accepts injected traffic under a key the attacker fully controls.
         </p>
       </div>
 
@@ -122,6 +127,212 @@
           applied to the Wi-Fi link layer, enabling interception even where encryption and IP-layer isolation both
           hold.
         </p>
+      </div>
+
+      <div class="attack">
+        <h3>4. Broadcast Reflection</h3>
+        <p>
+          By crafting a Wi-Fi frame with <code>ToDS=1</code> and the broadcast address in the Address 3 field, an
+          attacker tricks the AP into treating the frame as group traffic and re-encrypting it with the victim
+          BSSID's GTK — delivering an attacker-chosen unicast payload to the victim without ever knowing or
+          extracting that GTK. This GTK-free injection can be chained with Port-Stealing to reflect intercepted
+          packets back to the victim, sustaining a full bidirectional MitM even across BSSIDs.
+        </p>
+      </div>
+    </section>
+
+    <section id="cves">
+      <h2><span class="eyebrow">CVE List</span>Assigned CVE identifiers</h2>
+      <p>
+        Where AirSnitch's attack techniques apply to a specific vendor's product, we pursue coordinated disclosure
+        and track the resulting CVE identifiers below. This list will grow as additional disclosures complete.
+      </p>
+      <div class="table-wrap">
+        <table class="cve-table">
+          <thead>
+            <tr>
+              <th>CVE ID</th>
+              <th>Vendor / Product</th>
+              <th>Attack Technique</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-20671">CVE-2026-20671</a></td>
+              <td>Apple — iOS/iPadOS, macOS, tvOS, visionOS, watchOS</td>
+              <td title="Apple: &quot;A logic issue was addressed with improved checks. An attacker in a privileged network position may be able to intercept network traffic.&quot; (kernel, libnetcore)">Cross-layer MitM (client-side)</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23601">CVE-2026-23601</a></td>
+              <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
+              <td title="Direct GTK Abuse (paper §IV-B): the attacker waits for a periodic GTK refresh — or forces one by spoofing a BSS Transition Request to trigger an FT handshake — to obtain the BSSID's real shared GTK, then impersonates that BSSID to inject tampered traffic at specific clients.">Direct GTK Abuse — Frame Injection</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23808">CVE-2026-23808</a></td>
+              <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
+              <td title="Non-Randomized IGTK Abuse (paper §IV-B): the attacker abuses the shared IGTK to send a broadcast WNM-Sleep Response frame — a standardized 802.11v management/roaming frame — carrying a GTK of the attacker's own choosing. The victim installs this attacker-chosen GTK, after which the attacker injects broadcast/multicast traffic under a key it fully controls, without ever needing the real GTK.">IGTK Abuse — Attacker-Chosen GTK Installation</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23809">CVE-2026-23809</a></td>
+              <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
+              <td title="MAC Address Spoofing leads to Inter-BSSID Isolation Bypass: a port-stealing method adapted to multi-BSSID Wi-Fi, exploiting the relationship between BSSIDs and their virtual ports to redirect and intercept a victim's traffic.">Port-Stealing — Inter-BSSID Bypass</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23810">CVE-2026-23810</a></td>
+              <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
+              <td title="Cross-BSSID GTK Re-encryption and Traffic Injection: matches the paper's Broadcast Reflection technique (§V-C) — a crafted frame with ToDS=1 and a broadcast Address 3 tricks the AP into re-encrypting it with the victim BSSID's GTK, enabling GTK-free injection. When further chained with Port-Stealing, this can produce MitM across BSSID boundaries.">Broadcast Reflection</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23811">CVE-2026-23811</a></td>
+              <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
+              <td title="Unauthorized Bi-Directional Traffic Interception via L2/L3 Manipulation: client isolation's Layer-2 restriction is bypassed and traffic is redirected at Layer-3 — Gateway Bouncing. When further combined with a port-stealing attack, this can produce a full bidirectional MitM position.">Gateway Bouncing</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+            <tr>
+              <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23812">CVE-2026-23812</a></td>
+              <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
+              <td title="Security Boundary Bypass via Routing Node Impersonation (paper §V, Fig. 4): the attacker connects as an ordinary client but spoofs the gateway's own MAC address, stealing the gateway's virtual port at the AP's internal switch. This redirects uplink traffic other clients send toward the gateway to the attacker instead — Port-Stealing applied to the gateway's port, enabling interception or modification via a MitM position.">Port-Stealing — Gateway Impersonation</td>
+              <td><span class="cve-status">Fixed</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="news">
+      <h2><span class="eyebrow">News</span>Updates &amp; coverage</h2>
+
+      <div class="news-item">
+        <span class="news-date">11/2026</span>
+        <h3>AirSnitch project site revamped</h3>
+        <p>This site went live with the paper, attack overview, and artifact links ahead of NDSS 2026.</p>
+      </div>
+
+      <div class="news-item">
+        <span class="news-date">2026</span>
+        <h3>Paper accepted to NDSS 2026</h3>
+        <p>AirSnitch was accepted to the 2026 Network and Distributed System Security Symposium, taking place
+          23–27 February 2026 in San Diego, CA, USA.</p>
+      </div>
+
+      <h3>Coverage</h3>
+      <div class="table-wrap">
+        <table class="coverage-table">
+          <thead>
+            <tr>
+              <th>Publication</th>
+              <th>Title</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/arstechnica.png" alt="" /> Ars Technica</td>
+              <td><a href="https://arstechnica.com/security/2026/02/new-airsnitch-attack-breaks-wi-fi-encryption-in-homes-offices-and-enterprises/">New AirSnitch attack bypasses Wi-Fi encryption in homes, offices, and enterprises</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/tomshardware.ico" alt="" /> Tom's Hardware</td>
+              <td><a href="https://www.tomshardware.com/tech-industry/cyber-security/researchers-discover-massive-wi-fi-vulnerability-affecting-multiple-access-points-airsnitch-lets-attackers-on-the-same-network-intercept-data-and-launch-machine-in-the-middle-attacks">Researchers discover massive Wi-Fi vulnerability affecting multiple access points — AirSnitch lets attackers on the same network intercept data and launch machine-in-the-middle attacks</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/cisco.ico" alt="" /> Cisco</td>
+              <td><a href="https://www.cisco.com/c/en/us/support/docs/wireless/catalyst-9800-series-wireless-controllers/225587-review-and-recommendations-for.html">Review and Recommendations for AirSnitch</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/mist.ico" alt="" /> Juniper Mist</td>
+              <td><a href="https://www.mist.com/documentation/airsnitch-overview/">AirSnitch Overview</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/sans.ico" alt="" /> SANS Institute</td>
+              <td><a href="https://www.sans.org/webcasts/airsnitch-how-worried-should-you-be">AirSnitch – How Worried Should You Be?</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/securew2.png" alt="" /> SecureW2</td>
+              <td><a href="https://securew2.com/blog/what-an-airsnitch-attack-is-and-how-to-prevent-it">AirSnitch: How it Changes Wi-Fi and Practical Defense Guidance</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/csa.ico" alt="" /> Cloud Security Alliance</td>
+              <td><a href="https://labs.cloudsecurityalliance.org/research/csa-research-note-airsnitch-wifi-cross-layer-mitm-20260310-c/">AirSnitch: Cross-Layer Wi-Fi Client Isolation Bypass Enabling Bidirectional Man-in-the-Middle Attacks</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/kaspersky.ico" alt="" /> Kaspersky</td>
+              <td><a href="https://www.kaspersky.com/blog/airsnitch-wi-fi-client-isolation-guest-network-vulnerability-and-mitigation/55597/">AirSnitch: attacking Wi-Fi client isolation and guest networks</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/securityweek.ico" alt="" /> SecurityWeek</td>
+              <td><a href="https://www.securityweek.com/new-airsnitch-attack-shows-wi-fi-client-isolation-could-be-a-false-sense-of-security/">New 'AirSnitch' Attack Shows Wi-Fi Client Isolation Could Be a False Sense of Security</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/sans.ico" alt="" /> SANS Institute</td>
+              <td><a href="https://www.sans.org/blog/airsnitch-wi-fi-client-isolation-what-security-teams-actually-need-know">AirSnitch and Wi-Fi Client Isolation: What Security Teams Actually Need to Know</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/supernetworks.png" alt="" /> Supernetworks</td>
+              <td><a href="https://www.supernetworks.org/pages/blog/airsnitch-breaking-wifi-client-isolation">AirSnitch: How Wi-Fi Client Isolation Gets Broken</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/9to5mac.ico" alt="" /> 9to5Mac</td>
+              <td><a href="https://9to5mac.com/2026/03/02/psa-most-wi-fi-routers-vulnerable-to-airsnitch-attack-heres-what-to-do/">PSA: Most Wi-Fi routers vulnerable to AirSnitch attack – here's what to do</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/ucr.ico" alt="" /> UC Riverside News</td>
+              <td><a href="https://news.ucr.edu/articles/2026/02/24/ucr-computer-scientists-reveal-wi-fi-security-flaws">UCR computer scientists reveal Wi-Fi security flaws</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/bastille.webp" alt="" /> Bastille Networks</td>
+              <td><a href="https://bastille.net/airsnitch-wifi-client-isolation-bypass/">AirSnitch: New Class of Wi-Fi Attacks Allows Malicious Devices to Wirelessly Attack Any Client on the Network</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/yahoo.png" alt="" /> Yahoo Tech</td>
+              <td><a href="https://tech.yahoo.com/cybersecurity/articles/researchers-discover-massive-wi-fi-190258282.html">Researchers discover massive Wi-Fi vulnerability affecting multiple access points — AirSnitch lets attackers on the same network intercept data and launch machine-in-the-middle attacks</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/schneier.ico" alt="" /> Schneier on Security</td>
+              <td><a href="https://www.schneier.com/blog/archives/2026/03/new-attack-against-wi-fi.html">New Attack Against Wi-Fi</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/techradar.ico" alt="" /> TechRadar</td>
+              <td><a href="https://www.techradar.com/pro/security/a-worrying-wi-fi-vulnerability-can-bypass-home-and-office-network-encryption-heres-how-to-stay-safe">A worrying Wi-Fi vulnerability can bypass home and office network encryption - here's how to stay safe</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/alloforfait.webp" alt="" /> Alloforfait (France)</td>
+              <td><a href="https://alloforfait.fr/actualites/149743-airsnitch-une-faille-majeure-menace-la-securite-de-tous-les-reseaux-wi-fi-meme-proteges.html">AirSnitch : une faille majeure menace la sécurité de tous les réseaux Wi-Fi, même protégés</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/winfuture.ico" alt="" /> WinFuture (Germany)</td>
+              <td><a href="https://winfuture.de/news,157151.html">AirSnitch: Zentrales Sicherheits-Feature in WLANs ausgehebelt</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/govroam.png" alt="" /> Govroam (Netherlands)</td>
+              <td><a href="https://govroam.nl/airsnitch-afluisteren-op-wi-fi/">AirSnitch: afluisteren op Wi-Fi</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/xataka.ico" alt="" /> Xataka (Spain)</td>
+              <td><a href="https://www.xataka.com/seguridad/configurar-wi-fi-para-invitados-parecia-buena-idea-que-ha-aparecido-ultima-vulnerabilidad-airsnitch">Las redes Wi-Fi para invitados parecían un refugio seguro para conectarse. AirSnitch acaba de demostrar que son un coladero</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/itmedia.ico" alt="" /> ITmedia (Japan)</td>
+              <td><a href="https://www.itmedia.co.jp/news/article/2611/11/2000003049/">"同じWi-Fiにいる誰か"に通信をのぞかれる？ 「クライアント分離」を2秒で突破する攻撃 米大学が検証</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/zdnetkr.ico" alt="" /> ZDNet Korea (South Korea)</td>
+              <td><a href="https://zdnet.co.kr/view/?no=20260306142021">와이파이 보안 흔드는 취약점 '에어스니치' 등장</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/technews.ico" alt="" /> TechNews (Taiwan)</td>
+              <td><a href="https://technews.tw/2026/03/05/airsnitch-mitm/">Wi-Fi 密碼再強也怕 AirSnitch 新型漏洞？攻擊者不破解加密也能執行 MitM 攻擊</a></td>
+            </tr>
+            <tr>
+              <td><img class="favicon" src="assets/favicons/zhihu.ico" alt="" /> Zhihu (China)</td>
+              <td><a href="https://zhuanlan.zhihu.com/p/2047669388908745526">Wi-Fi设备的客户端隔离，也许从来就没生效过</a></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </section>
 
@@ -192,14 +403,15 @@
       <p><a href="https://github.com/zhouxinan/airsnitch">Code repository 1</a></p>
       <p><a href="https://github.com/vanhoefm/airsnitch">Code repository 2</a></p>
       <p>
-        The artifact appendix also describes scripts to test devices for gateway bouncing, port stealing, and GTK
-        abuse, including a virtualized Wi-Fi environment to validate the tooling independent of physical hardware.
+        The artifact appendix also describes scripts to test devices for gateway bouncing, port stealing, GTK/IGTK
+        abuse, and broadcast reflection, including a virtualized Wi-Fi environment to validate the tooling
+        independent of physical hardware.
       </p>
     </section>
 
     <section id="faq">
       <h2><span class="eyebrow">FAQ</span>Questions &amp; Answers</h2>
-      <p class="faq-updated">Last updated 3/5/2026</p>
+      <p class="faq-updated">Last updated 11/20/2026</p>
 
       <details class="faq-item">
         <summary>What are the key discoveries of this paper?</summary>
@@ -366,7 +578,7 @@
       <a href="https://github.com/zhouxinan/airsnitch">Code repository 1</a> ·
       <a href="https://github.com/vanhoefm/airsnitch">Code repository 2</a>
     </p>
-    <p>Last updated 3/5/2026</p>
+    <p>Last updated 11/20/2026</p>
   </footer>
 
 </body>
