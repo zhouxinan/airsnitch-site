@@ -161,43 +161,43 @@
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-20671">CVE-2026-20671</a></td>
               <td>Apple — iOS/iPadOS, macOS, tvOS, visionOS, watchOS</td>
-              <td title="Apple: &quot;A logic issue was addressed with improved checks. An attacker in a privileged network position may be able to intercept network traffic.&quot; (kernel, libnetcore)">Cross-layer MitM (client-side)</td>
+              <td>Cross-layer MitM (client-side)</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23601">CVE-2026-23601</a></td>
               <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
-              <td title="Direct GTK Abuse (paper §IV-B): the attacker waits for a periodic GTK refresh — or forces one by spoofing a BSS Transition Request to trigger an FT handshake — to obtain the BSSID's real shared GTK, then impersonates that BSSID to inject tampered traffic at specific clients.">Direct GTK Abuse — Frame Injection</td>
+              <td>Direct GTK Abuse — Frame Injection</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23808">CVE-2026-23808</a></td>
               <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
-              <td title="Non-Randomized IGTK Abuse (paper §IV-B): the attacker abuses the shared IGTK to send a broadcast WNM-Sleep Response frame — a standardized 802.11v management/roaming frame — carrying a GTK of the attacker's own choosing. The victim installs this attacker-chosen GTK, after which the attacker injects broadcast/multicast traffic under a key it fully controls, without ever needing the real GTK.">IGTK Abuse — Attacker-Chosen GTK Installation</td>
+              <td>IGTK Abuse — Attacker-Chosen GTK Installation</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23809">CVE-2026-23809</a></td>
               <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
-              <td title="MAC Address Spoofing leads to Inter-BSSID Isolation Bypass: a port-stealing method adapted to multi-BSSID Wi-Fi, exploiting the relationship between BSSIDs and their virtual ports to redirect and intercept a victim's traffic.">Port-Stealing — Inter-BSSID Bypass</td>
+              <td>Port-Stealing — Inter-BSSID Bypass</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23810">CVE-2026-23810</a></td>
               <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
-              <td title="Cross-BSSID GTK Re-encryption and Traffic Injection: matches the paper's Broadcast Reflection technique (§V-C) — a crafted frame with ToDS=1 and a broadcast Address 3 tricks the AP into re-encrypting it with the victim BSSID's GTK, enabling GTK-free injection. When further chained with Port-Stealing, this can produce MitM across BSSID boundaries.">Broadcast Reflection</td>
+              <td>Broadcast Reflection</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23811">CVE-2026-23811</a></td>
               <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
-              <td title="Unauthorized Bi-Directional Traffic Interception via L2/L3 Manipulation: client isolation's Layer-2 restriction is bypassed and traffic is redirected at Layer-3 — Gateway Bouncing. When further combined with a port-stealing attack, this can produce a full bidirectional MitM position.">Gateway Bouncing</td>
+              <td>Gateway Bouncing</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
             <tr>
               <td><a href="https://nvd.nist.gov/vuln/detail/CVE-2026-23812">CVE-2026-23812</a></td>
               <td>HPE Aruba Networking — AOS-8 &amp; AOS-10</td>
-              <td title="Security Boundary Bypass via Routing Node Impersonation (paper §V, Fig. 4): the attacker connects as an ordinary client but spoofs the gateway's own MAC address, stealing the gateway's virtual port at the AP's internal switch. This redirects uplink traffic other clients send toward the gateway to the attacker instead — Port-Stealing applied to the gateway's port, enabling interception or modification via a MitM position.">Port-Stealing — Gateway Impersonation</td>
+              <td>Port-Stealing — Gateway Impersonation</td>
               <td><span class="cve-status">Fixed</span></td>
             </tr>
           </tbody>
